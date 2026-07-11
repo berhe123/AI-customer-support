@@ -1,0 +1,60 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ai-support-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ai_support
+      POSTGRES_PASSWORD: ai_support_secret
+      POSTGRES_DB: ai_customer_support
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ai_support -d ai_customer_support']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ai-support-api
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    ports:
+      - '3001:3001'
+    environment:
+      DATABASE_URL: postgresql://ai_support:ai_support_secret@postgres:5432/ai_customer_support
+      JWT_SECRET: ${JWT_SECRET:-super-secret-jwt-key-change-in-production}
+      JWT_EXPIRES_IN: 7d
+      PORT: 3001
+      NODE_ENV: production
+      CORS_ORIGIN: http://localhost:5173
+      UPLOAD_DIR: /app/uploads
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api
+        VITE_WS_URL: ""
+    container_name: ai-support-web
+    restart: unless-stopped
+    ports:
+      - '5173:80'
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  uploads_data:

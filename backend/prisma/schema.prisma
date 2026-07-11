@@ -1,0 +1,184 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  AGENT
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum Sentiment {
+  POSITIVE
+  NEUTRAL
+  NEGATIVE
+  URGENT
+}
+
+enum AiReplyAction {
+  ACCEPTED
+  EDITED
+  REJECTED
+}
+
+enum AttachmentSource {
+  CUSTOMER
+  AGENT
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  name         String
+  role         Role     @default(AGENT)
+  avatarUrl    String?  @map("avatar_url")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  assignedTickets Ticket[]    @relation("AssignedAgent")
+  messages        Message[]
+  aiReplyLogs     AiReplyLog[]
+
+  @@map("users")
+}
+
+model Customer {
+  id          String   @id @default(cuid())
+  name        String
+  email       String   @unique
+  company     String?
+  phone       String?
+  healthScore Int      @default(100) @map("health_score")
+  notes       String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  tickets Ticket[]
+
+  @@map("customers")
+}
+
+model Ticket {
+  id              String         @id @default(cuid())
+  subject         String
+  status          TicketStatus   @default(OPEN)
+  priority        TicketPriority @default(MEDIUM)
+  sentiment       Sentiment      @default(NEUTRAL)
+  sentimentScore  Float          @default(0) @map("sentiment_score")
+  tags            String[]       @default([])
+  firstResponseAt DateTime?      @map("first_response_at")
+  closedAt        DateTime?      @map("closed_at")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  customerId      String  @map("customer_id")
+  customer        Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  assignedAgentId String? @map("assigned_agent_id")
+  assignedAgent   User?   @relation("AssignedAgent", fields: [assignedAgentId], references: [id], onDelete: SetNull)
+  gmailThreadId   String? @unique @map("gmail_thread_id")
+  gmailMessageId  String? @unique @map("gmail_message_id")
+  gmailReceivedAt DateTime? @map("gmail_received_at")
+
+  messages    Message[]
+  aiReplyLogs AiReplyLog[]
+
+  @@index([status])
+  @@index([priority])
+  @@index([customerId])
+  @@index([assignedAgentId])
+  @@index([createdAt])
+  @@map("tickets")
+}
+
+model GmailIntegration {
+  id            String    @id @default(cuid())
+  emailAddress  String    @map("email_address")
+  refreshToken  String    @map("refresh_token")
+  accessToken   String?   @map("access_token")
+  tokenExpiry   DateTime? @map("token_expiry")
+  lastSyncAt    DateTime? @map("last_sync_at")
+  syncFromDate  DateTime  @default(now()) @map("sync_from_date")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@map("gmail_integrations")
+}
+
+model ProcessedEmail {
+  id             String   @id @default(cuid())
+  gmailMessageId String   @unique @map("gmail_message_id")
+  ticketId       String   @map("ticket_id")
+  processedAt    DateTime @default(now()) @map("processed_at")
+
+  @@map("processed_emails")
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  content   String
+  isAgent   Boolean  @default(false) @map("is_agent")
+  isAiGenerated Boolean @default(false) @map("is_ai_generated")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  ticketId String @map("ticket_id")
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorId String? @map("author_id")
+  author   User?  @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  attachments Attachment[]
+
+  @@index([ticketId])
+  @@map("messages")
+}
+
+model Attachment {
+  id           String           @id @default(cuid())
+  fileName     String           @map("file_name")
+  mimeType     String           @map("mime_type")
+  size         Int
+  storageKey   String           @unique @map("storage_key")
+  source       AttachmentSource @default(AGENT)
+  createdAt    DateTime         @default(now()) @map("created_at")
+
+  messageId String  @map("message_id")
+  message   Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+  @@map("attachments")
+}
+
+model AiReplyLog {
+  id           String        @id @default(cuid())
+  suggestion   String
+  finalReply   String?       @map("final_reply")
+  action       AiReplyAction
+  confidence   Float         @default(0.85)
+  responseTime Int           @map("response_time_ms")
+  createdAt    DateTime      @default(now()) @map("created_at")
+
+  ticketId String @map("ticket_id")
+  ticket   Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  agentId  String @map("agent_id")
+  agent    User   @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
+  @@index([agentId])
+  @@map("ai_reply_logs")
+}
