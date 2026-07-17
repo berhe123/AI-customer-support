@@ -2,6 +2,7 @@ import { createServer } from 'http';
 import { Server as SocketServer } from 'socket.io';
 import { createApp } from './app.js';
 import { env } from './config/env.js';
+import { corsOriginCallback } from './config/cors.js';
 import { ticketService } from './modules/tickets/ticket.service.js';
 import { gmailService } from './modules/email/gmail.service.js';
 import { ensureUploadDir } from './shared/storage/file-storage.js';
@@ -10,7 +11,10 @@ const app = createApp();
 const httpServer = createServer(app);
 
 const io = new SocketServer(httpServer, {
-  cors: { origin: env.CORS_ORIGIN, credentials: true },
+  cors: {
+    origin: corsOriginCallback,
+    credentials: true,
+  },
 });
 
 io.on('connection', (socket) => {

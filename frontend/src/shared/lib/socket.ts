@@ -13,7 +13,13 @@ export function useSocket() {
 
   useEffect(() => {
     if (!socket) {
-      socket = io(config.wsUrl, { transports: ['websocket', 'polling'] });
+      // Prefer polling first so Render cold starts / proxies still work; websocket upgrades after.
+      socket = io(config.wsUrl, {
+        transports: ['polling', 'websocket'],
+        path: '/socket.io',
+        withCredentials: true,
+        reconnectionAttempts: 8,
+      });
     }
 
     const handleTicketCreated = (ticket: { subject: string }) => {

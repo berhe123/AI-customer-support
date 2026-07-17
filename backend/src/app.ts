@@ -7,12 +7,17 @@ import customerRoutes from './modules/customers/customer.routes.js';
 import analyticsRoutes from './modules/analytics/analytics.routes.js';
 import attachmentRoutes from './modules/attachments/attachment.routes.js';
 import { errorHandler, notFoundHandler } from './shared/middleware/error-handler.js';
-import { env } from './config/env.js';
+import { corsOriginCallback } from './config/cors.js';
 
 export function createApp() {
   const app = express();
 
-  app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
+  app.use(
+    cors({
+      origin: corsOriginCallback,
+      credentials: true,
+    }),
+  );
   app.use(express.json({ limit: '10mb' }));
 
   app.get('/api/health', (_req, res) => {
