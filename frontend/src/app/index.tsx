@@ -4,7 +4,6 @@ import { SocketProvider } from './providers/SocketProvider';
 import { ProtectedRoute } from './providers/ProtectedRoute';
 import { DashboardLayout } from './layouts/DashboardLayout';
 import { LoginPage } from '@/pages/login/ui/LoginPage';
-import { RegisterPage } from '@/pages/register/ui/RegisterPage';
 import { OverviewPage } from '@/pages/overview/ui/OverviewPage';
 import { TicketsPage } from '@/pages/tickets/ui/TicketsPage';
 import { TicketDetailPage } from '@/pages/ticket-detail/ui/TicketDetailPage';
@@ -18,7 +17,7 @@ export function AppRouter() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/register" element={<Navigate to="/login" replace />} />
         <Route
           element={
             <ProtectedRoute>

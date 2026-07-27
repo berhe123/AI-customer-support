@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   TextField,
   Button,
   Typography,
-  Link,
   Alert,
   InputAdornment,
   IconButton,
@@ -211,13 +210,6 @@ export function LoginPage() {
               {loading ? 'Signing in...' : 'Sign in'}
             </Button>
           </Box>
-
-          <Typography variant="body2" sx={{ mt: 3, textAlign: 'center', color: tokens.colors.textSecondary }}>
-            No account?{' '}
-            <Link component={RouterLink} to="/register" underline="hover" sx={{ color: tokens.colors.accentLight, fontWeight: 600 }}>
-              Create one
-            </Link>
-          </Typography>
         </Box>
       </Box>
     </Box>
