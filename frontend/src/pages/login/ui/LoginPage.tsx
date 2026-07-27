@@ -93,7 +93,7 @@ export function LoginPage() {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 4 }}>
             <LogoMark size="lg" />
             <Typography variant="h5" sx={brandTitleSx}>
-              SupportAI
+              Myswooop AI Support
             </Typography>
           </Box>
           <Typography
@@ -150,7 +150,7 @@ export function LoginPage() {
         <Box sx={{ width: '100%', maxWidth: 400 }}>
           <Box sx={{ display: { xs: 'flex', lg: 'none' }, alignItems: 'center', gap: 1.5, mb: 4, justifyContent: 'center' }}>
             <LogoMark size="md" />
-            <Typography variant="h6" sx={brandTitleSx}>SupportAI</Typography>
+            <Typography variant="h6" sx={brandTitleSx}>Myswooop AI Support</Typography>
           </Box>
 
           <Typography variant="h4" fontWeight={800} letterSpacing="-0.03em" mb={0.5}>
